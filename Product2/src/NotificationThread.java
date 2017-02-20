@@ -142,7 +142,9 @@ public class NotificationThread extends Thread {
 	public NotificationThread() {
 		try {
 			serverSocket_note = new ServerSocket(port_note);
+			serverSocket_note.setSoTimeout(0);
 			serverSocket_frame = new ServerSocket(port_frame);
+			serverSocket_frame.setSoTimeout(0);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println(String.format("problem2"));
@@ -161,12 +163,14 @@ public class NotificationThread extends Thread {
 						in_note = socket_note.getInputStream();
 						out_note.write(p);
 						out_note.flush();
+						in_note.read();
 						if (p == Main.BYTE_FACEFOUND_VDOGENERATING || p == Main.BYTE_ALERT1) {
 							System.out.println("1st notif sent..........................");
 							
 							socket_frame = serverSocket_frame.accept();
 							out_frame = socket_frame.getOutputStream();
 							ImageIO.write(notifFrame, "jpg", out_frame);
+							out_frame.close();
 							socket_frame.close();
 						}
 						if (p == Main.BYTE_FACEFOUND_VDOGENERATED || p == Main.BYTE_ALERT2)
@@ -178,6 +182,7 @@ public class NotificationThread extends Thread {
 						int q = in_note.read();
 						if (q == 9)
 							continue_sending = false;
+						socket_note.shutdownOutput();
 						socket_note.close();
 					}
 					continue_sending = true;
